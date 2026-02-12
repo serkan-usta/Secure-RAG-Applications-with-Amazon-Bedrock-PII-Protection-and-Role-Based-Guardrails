@@ -1,6 +1,0 @@
----
-collections:
-  - name: amazon.aws
-  - name: community.aws
-  - name: redhat.sap_install
-  - name: redhat.rhel_system_roles
