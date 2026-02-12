@@ -1,31 +1,20 @@
-# Secure RAG Applications with Amazon Bedrock — PII Protection & Role-Based Guardrails
+# Secure RAG Applications with Amazon Bedrock — Role-Based Guardrails
 
-> **Infrastructure as Code** — Full Terraform implementation of the AWS architecture patterns 
+> **Infrastructure as Code** — Terraform implementation of Role-Based Access Control (RBAC) for RAG applications on AWS using Amazon Bedrock.
 
 ---
 
 ## Overview
 
-This repository provides production-ready Terraform modules to deploy two security patterns for RAG (Retrieval Augmented Generation) applications on AWS, protecting sensitive data (PII/PHI) throughout the entire pipeline.
-
-| Pattern | Description |
-|---|---|
-| **Scenario 1** | PII redaction at ingestion time — data is sanitized *before* entering the vector store |
-| **Scenario 2** | Role-Based Access Control (RBAC) — admin vs non-admin guardrails at retrieval time |
+This repository provides Terraform modules to deploy a role-based access control pattern for RAG (Retrieval Augmented Generation) applications on AWS, protecting sensitive data (PII/PHI) during retrieval based on user roles.
 
 ---
 
 ## Architecture
 
-### Scenario 1 — PII Redaction at Storage Level
+![Architecture](docs/architecture.png)
 
-1. Documents uploaded to S3 trigger an EventBridge → Lambda pipeline
-2. **Amazon Comprehend** detects and redacts PII entities (`[NAME]`, `[SSN]`, etc.)
-3. **Amazon Macie** performs secondary verification; high-severity files go to quarantine
-4. Clean documents are ingested into the Bedrock Knowledge Base
-5. At retrieval time, **Bedrock Guardrails** apply input/output content policies
-
-### Scenario 2 — Role-Based Access Control (RBAC)
+### How It Works
 
 1. Users authenticate via **Amazon Cognito**
 2. **API Gateway** forwards JWT claims to Lambda
@@ -38,24 +27,19 @@ This repository provides production-ready Terraform modules to deploy two securi
 ## Repository Structure
 ```
 .
-├── scenario_1/                  # Scenario 1: PII Redaction at Ingestion
-│   ├── main.tf
-│   ├── variables.tf
-│   └── outputs.tf
-├── scenario_2/                  # Scenario 2: RBAC at Retrieval
-│   ├── main.tf
-│   ├── variables.tf
-│   └── outputs.tf
+├── main.tf
+├── variables.tf
+├── outputs.tf
 ├── modules/
 │   ├── cognito/
 │   ├── api_gateway/
 │   ├── lambda/
-│   ├── s3/
 │   ├── bedrock_kb/
 │   ├── opensearch/
 │   ├── guardrails/
 │   └── kms/
 └── docs/
+    └── architecture.png
 ```
 
 ---
@@ -65,13 +49,9 @@ This repository provides production-ready Terraform modules to deploy two securi
 - **Amazon Bedrock** — Knowledge Bases, Guardrails, Foundation Models
 - **Amazon Cognito** — Authentication & JWT token generation
 - **Amazon API Gateway** — REST API endpoint
-- **AWS Lambda** — Conversation orchestrator, Comprehend trigger, Macie monitor
-- **Amazon Comprehend** — Async PII detection & redaction jobs
-- **Amazon Macie** — Secondary PII verification & quarantine
+- **AWS Lambda** — Conversation orchestrator (RBAC logic)
 - **Amazon OpenSearch Serverless** — Vector store for embeddings
-- **Amazon S3** — Document storage (inputs, processing, redacted, quarantine)
-- **Amazon DynamoDB** — Job tracking table
-- **Amazon EventBridge** — Scheduled triggers (every 5 min)
+- **AWS KMS** — Encryption at rest
 - **AWS IAM** — Least-privilege roles & policies
 
 ---
@@ -85,20 +65,9 @@ This repository provides production-ready Terraform modules to deploy two securi
 ---
 
 ## Quick Start
-
-### Deploy Scenario 1 — PII Redaction
 ```bash
-cd scenario_1
 cp terraform.tfvars.example terraform.tfvars
-terraform init
-terraform plan
-terraform apply
-```
-
-### Deploy Scenario 2 — RBAC
-```bash
-cd scenario_2
-cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
 terraform init
 terraform plan
 terraform apply
